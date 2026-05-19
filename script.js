@@ -38,6 +38,7 @@ const poultrySafeOpt = document.getElementById('poultry-safe');
 const fishSafeOpt = document.getElementById('fish-safe');
 const duckMrOpt = document.getElementById('duck-mr');
 const duckMedOpt = document.getElementById('duck-med');
+const bbqSafeOpt = document.getElementById('bbq-safe');
 
 // UI Logic
 function updateUI() {
@@ -47,7 +48,7 @@ function updateUI() {
     const options = finalDoneness.options;
     for (let i = 0; i < options.length; i++) {
         const val = parseInt(options[i].value);
-        if (options[i].id === 'poultry-safe' || options[i].id === 'fish-safe' || options[i].id === 'duck-mr' || options[i].id === 'duck-med') continue; // handled separately
+        if (options[i].id === 'poultry-safe' || options[i].id === 'fish-safe' || options[i].id === 'duck-mr' || options[i].id === 'duck-med' || options[i].id === 'bbq-safe') continue; // handled separately
         
         if (meatType.value === 'pork' && val < 145) {
             options[i].disabled = true;
@@ -71,6 +72,7 @@ function updateUI() {
         fishSafeOpt.style.display = 'none';
         duckMrOpt.style.display = 'none';
         duckMedOpt.style.display = 'none';
+        bbqSafeOpt.style.display = 'none';
         finalDoneness.value = "165";
     } else if (meatType.value === 'fish') {
         // Hide standard options, show and force select Fish safe option
@@ -83,6 +85,7 @@ function updateUI() {
         poultrySafeOpt.style.display = 'none';
         duckMrOpt.style.display = 'none';
         duckMedOpt.style.display = 'none';
+        bbqSafeOpt.style.display = 'none';
         finalDoneness.value = "140";
     } else if (meatType.value === 'duck') {
         for (let i = 0; i < options.length; i++) {
@@ -94,13 +97,27 @@ function updateUI() {
         duckMedOpt.style.display = '';
         poultrySafeOpt.style.display = 'none';
         fishSafeOpt.style.display = 'none';
+        bbqSafeOpt.style.display = 'none';
         if (finalDoneness.value !== "130" && finalDoneness.value !== "140") {
             finalDoneness.value = "130";
         }
+    } else if (meatType.value === 'bbq') {
+        // Hide standard options, show and force select BBQ option
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].id !== 'bbq-safe') {
+                options[i].style.display = 'none';
+            }
+        }
+        bbqSafeOpt.style.display = '';
+        poultrySafeOpt.style.display = 'none';
+        fishSafeOpt.style.display = 'none';
+        duckMrOpt.style.display = 'none';
+        duckMedOpt.style.display = 'none';
+        finalDoneness.value = "200";
     } else {
         // Hide safe options, show standard options
         for (let i = 0; i < options.length; i++) {
-            if (options[i].id !== 'poultry-safe' && options[i].id !== 'fish-safe' && options[i].id !== 'duck-mr' && options[i].id !== 'duck-med') {
+            if (options[i].id !== 'poultry-safe' && options[i].id !== 'fish-safe' && options[i].id !== 'duck-mr' && options[i].id !== 'duck-med' && options[i].id !== 'bbq-safe') {
                 options[i].style.display = '';
             }
         }
@@ -108,7 +125,8 @@ function updateUI() {
         fishSafeOpt.style.display = 'none';
         duckMrOpt.style.display = 'none';
         duckMedOpt.style.display = 'none';
-        if (finalDoneness.value === "165" || finalDoneness.value === "140" || finalDoneness.value === "130") {
+        bbqSafeOpt.style.display = 'none';
+        if (finalDoneness.value === "165" || finalDoneness.value === "140" || finalDoneness.value === "130" || finalDoneness.value === "200") {
             finalDoneness.value = "145"; // reset back to medium
         }
     }
@@ -130,12 +148,14 @@ function calculate() {
     const isFish = meatType.value === 'fish';
     const isGame = meatType.value === 'game';
     const isDuck = meatType.value === 'duck';
+    const isBbq = meatType.value === 'bbq';
     
     let targetTempF = parseInt(finalDoneness.value);
     
     // Enforce logic rule minimums defensively
     if (isPoultry) targetTempF = 165;
     if (isFish) targetTempF = 140;
+    if (isBbq) targetTempF = 200;
     if (isPork && targetTempF < 145) targetTempF = 145;
 
     let carryoverSubF = 0;
@@ -144,6 +164,8 @@ function calculate() {
     if (isFish) {
         carryoverSubF = 3;
         restTimeStr = "a few minutes";
+    } else if (isBbq) {
+        carryoverSubF = targetTempF - 195; // Forces pull temp to 195
     } else {
         switch (cutSize.value) {
             case 'large':
@@ -176,6 +198,8 @@ function calculate() {
 
     if (isGame) {
         restWarning.innerHTML = `<strong>Chef's Note:</strong> Game meat is extremely lean. It is highly recommended not to target above Medium-Rare (135°F) or it will dry out. Rest 5-10 minutes.`;
+    } else if (isBbq) {
+        restWarning.innerHTML = `<strong>Chef's Note:</strong> Barbecue cuts are cooked for tenderness, not temperature. Pull when a probe slides in like warm butter (usually around 195°F-203°F). You MUST rest these large cuts in an insulated cooler for 1 to 2 hours before slicing.`;
     } else {
         restWarning.innerHTML = `<strong>Chef's Note:</strong> You must rest the meat uncovered for at least <strong>${restTimeStr}</strong> to achieve this final temperature. Cutting early halts the cooking process and ruins the calculation.`;
     }
