@@ -36,6 +36,8 @@ const restWarning = document.getElementById('rest-warning');
 const copyBtn = document.getElementById('copy-btn');
 const poultrySafeOpt = document.getElementById('poultry-safe');
 const fishSafeOpt = document.getElementById('fish-safe');
+const duckMrOpt = document.getElementById('duck-mr');
+const duckMedOpt = document.getElementById('duck-med');
 
 // UI Logic
 function updateUI() {
@@ -45,7 +47,7 @@ function updateUI() {
     const options = finalDoneness.options;
     for (let i = 0; i < options.length; i++) {
         const val = parseInt(options[i].value);
-        if (options[i].id === 'poultry-safe' || options[i].id === 'fish-safe') continue; // handled separately
+        if (options[i].id === 'poultry-safe' || options[i].id === 'fish-safe' || options[i].id === 'duck-mr' || options[i].id === 'duck-med') continue; // handled separately
         
         if (meatType.value === 'pork' && val < 145) {
             options[i].disabled = true;
@@ -67,6 +69,8 @@ function updateUI() {
         }
         poultrySafeOpt.style.display = '';
         fishSafeOpt.style.display = 'none';
+        duckMrOpt.style.display = 'none';
+        duckMedOpt.style.display = 'none';
         finalDoneness.value = "165";
     } else if (meatType.value === 'fish') {
         // Hide standard options, show and force select Fish safe option
@@ -77,17 +81,34 @@ function updateUI() {
         }
         fishSafeOpt.style.display = '';
         poultrySafeOpt.style.display = 'none';
+        duckMrOpt.style.display = 'none';
+        duckMedOpt.style.display = 'none';
         finalDoneness.value = "140";
+    } else if (meatType.value === 'duck') {
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].id !== 'duck-mr' && options[i].id !== 'duck-med') {
+                options[i].style.display = 'none';
+            }
+        }
+        duckMrOpt.style.display = '';
+        duckMedOpt.style.display = '';
+        poultrySafeOpt.style.display = 'none';
+        fishSafeOpt.style.display = 'none';
+        if (finalDoneness.value !== "130" && finalDoneness.value !== "140") {
+            finalDoneness.value = "130";
+        }
     } else {
         // Hide safe options, show standard options
         for (let i = 0; i < options.length; i++) {
-            if (options[i].id !== 'poultry-safe' && options[i].id !== 'fish-safe') {
+            if (options[i].id !== 'poultry-safe' && options[i].id !== 'fish-safe' && options[i].id !== 'duck-mr' && options[i].id !== 'duck-med') {
                 options[i].style.display = '';
             }
         }
         poultrySafeOpt.style.display = 'none';
         fishSafeOpt.style.display = 'none';
-        if (finalDoneness.value === "165" || finalDoneness.value === "140") {
+        duckMrOpt.style.display = 'none';
+        duckMedOpt.style.display = 'none';
+        if (finalDoneness.value === "165" || finalDoneness.value === "140" || finalDoneness.value === "130") {
             finalDoneness.value = "145"; // reset back to medium
         }
     }
@@ -108,6 +129,7 @@ function calculate() {
     const isPork = meatType.value === 'pork';
     const isFish = meatType.value === 'fish';
     const isGame = meatType.value === 'game';
+    const isDuck = meatType.value === 'duck';
     
     let targetTempF = parseInt(finalDoneness.value);
     
