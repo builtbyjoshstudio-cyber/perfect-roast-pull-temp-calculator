@@ -35,6 +35,7 @@ const targetTempOutput = document.getElementById('target-temp-output');
 const restWarning = document.getElementById('rest-warning');
 const copyBtn = document.getElementById('copy-btn');
 const poultrySafeOpt = document.getElementById('poultry-safe');
+const fishSafeOpt = document.getElementById('fish-safe');
 
 // UI Logic
 function updateUI() {
@@ -44,7 +45,7 @@ function updateUI() {
     const options = finalDoneness.options;
     for (let i = 0; i < options.length; i++) {
         const val = parseInt(options[i].value);
-        if (options[i].id === 'poultry-safe') continue; // handled separately
+        if (options[i].id === 'poultry-safe' || options[i].id === 'fish-safe') continue; // handled separately
         
         if (meatType.value === 'pork' && val < 145) {
             options[i].disabled = true;
@@ -65,16 +66,28 @@ function updateUI() {
             }
         }
         poultrySafeOpt.style.display = '';
+        fishSafeOpt.style.display = 'none';
         finalDoneness.value = "165";
-    } else {
-        // Hide safe option, show standard options
+    } else if (meatType.value === 'fish') {
+        // Hide standard options, show and force select Fish safe option
         for (let i = 0; i < options.length; i++) {
-            if (options[i].id !== 'poultry-safe') {
+            if (options[i].id !== 'fish-safe') {
+                options[i].style.display = 'none';
+            }
+        }
+        fishSafeOpt.style.display = '';
+        poultrySafeOpt.style.display = 'none';
+        finalDoneness.value = "140";
+    } else {
+        // Hide safe options, show standard options
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].id !== 'poultry-safe' && options[i].id !== 'fish-safe') {
                 options[i].style.display = '';
             }
         }
         poultrySafeOpt.style.display = 'none';
-        if (finalDoneness.value === "165") {
+        fishSafeOpt.style.display = 'none';
+        if (finalDoneness.value === "165" || finalDoneness.value === "140") {
             finalDoneness.value = "145"; // reset back to medium
         }
     }
@@ -93,29 +106,37 @@ function calculate() {
     const isCelsius = unitToggle.checked;
     const isPoultry = meatType.value === 'poultry';
     const isPork = meatType.value === 'pork';
+    const isFish = meatType.value === 'fish';
+    const isGame = meatType.value === 'game';
     
     let targetTempF = parseInt(finalDoneness.value);
     
     // Enforce logic rule minimums defensively
     if (isPoultry) targetTempF = 165;
+    if (isFish) targetTempF = 140;
     if (isPork && targetTempF < 145) targetTempF = 145;
 
     let carryoverSubF = 0;
     let restTimeStr = "";
     
-    switch (cutSize.value) {
-        case 'large':
-            carryoverSubF = 10;
-            restTimeStr = "15 mins for large roasts";
-            break;
-        case 'thick':
-            carryoverSubF = 5;
-            restTimeStr = "5 mins for steaks/chops";
-            break;
-        case 'thin':
-            carryoverSubF = 2;
-            restTimeStr = "5 mins for thin cuts";
-            break;
+    if (isFish) {
+        carryoverSubF = 3;
+        restTimeStr = "a few minutes";
+    } else {
+        switch (cutSize.value) {
+            case 'large':
+                carryoverSubF = 10;
+                restTimeStr = "15 mins for large roasts";
+                break;
+            case 'thick':
+                carryoverSubF = 5;
+                restTimeStr = "5 mins for steaks/chops";
+                break;
+            case 'thin':
+                carryoverSubF = 2;
+                restTimeStr = "5 mins for thin cuts";
+                break;
+        }
     }
 
     const pullTempF = targetTempF - carryoverSubF;
@@ -131,7 +152,11 @@ function calculate() {
         targetTempOutput.innerText = `${targetTempF}°F`;
     }
 
-    restWarning.innerHTML = `<strong>Chef's Note:</strong> You must rest the meat uncovered for at least <strong>${restTimeStr}</strong> to achieve this final temperature. Cutting early halts the cooking process and ruins the calculation.`;
+    if (isGame) {
+        restWarning.innerHTML = `<strong>Chef's Note:</strong> Game meat is extremely lean. It is highly recommended not to target above Medium-Rare (135°F) or it will dry out. Rest 5-10 minutes.`;
+    } else {
+        restWarning.innerHTML = `<strong>Chef's Note:</strong> You must rest the meat uncovered for at least <strong>${restTimeStr}</strong> to achieve this final temperature. Cutting early halts the cooking process and ruins the calculation.`;
+    }
 }
 
 // Event Listeners
