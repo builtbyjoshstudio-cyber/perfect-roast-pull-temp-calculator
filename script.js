@@ -25,7 +25,10 @@ function setTheme(themeName) {
 }
 
 // DOM Elements
-const unitToggle = document.getElementById('unit-toggle');
+const unitImperialBtn = document.getElementById('unit-imperial');
+const unitMetricBtn = document.getElementById('unit-metric');
+let currentUnit = 'imperial';
+
 const meatType = document.getElementById('meat-type');
 const cutSize = document.getElementById('cut-size');
 const finalDoneness = document.getElementById('final-doneness');
@@ -45,9 +48,63 @@ const duckBreastMrOpt = document.getElementById('duck-breast-mr');
 const cutBrisket = document.getElementById('cut-brisket');
 const cutDuckBreast = document.getElementById('cut-duck-breast');
 
+function updateDonenessOptionTexts(isCelsius) {
+    const options = finalDoneness.options;
+    for (let i = 0; i < options.length; i++) {
+        const opt = options[i];
+        if (opt.id === 'poultry-safe') {
+            opt.textContent = isCelsius ? 'Safe (74°C)' : 'Safe (165°F / 74°C)';
+        } else if (opt.id === 'fish-safe') {
+            opt.textContent = isCelsius ? 'Flaky/Opaque (60°C)' : 'Flaky/Opaque (140°F / 60°C)';
+        } else if (opt.id === 'duck-mr') {
+            opt.textContent = isCelsius ? 'Medium-Rare (54°C)' : 'Medium-Rare (130°F / 54°C)';
+        } else if (opt.id === 'duck-med') {
+            opt.textContent = isCelsius ? 'Medium (60°C)' : 'Medium (140°F / 60°C)';
+        } else if (opt.id === 'bbq-safe') {
+            opt.textContent = isCelsius ? 'Probe Tender (93°C - 96°C)' : 'Probe Tender (200°F - 205°F)';
+        } else if (opt.id === 'brisket-safe') {
+            opt.textContent = isCelsius ? 'Collagen Breakdown (95°C)' : 'Collagen Breakdown (203°F / 95°C)';
+        } else if (opt.id === 'duck-breast-mr') {
+            opt.textContent = isCelsius ? 'Medium-Rare (57°C)' : 'Medium-Rare (135°F / 57°C)';
+        } else {
+            const labels = {
+                '125': 'Rare',
+                '135': 'Medium-Rare',
+                '145': 'Medium',
+                '150': 'Medium-Well',
+                '160': 'Well Done'
+            };
+            const baseText = labels[opt.value] || opt.text.split(' (')[0];
+            const tempF = parseInt(opt.value);
+            if (isCelsius) {
+                const tempC = Math.round((tempF - 32) * 5 / 9);
+                opt.textContent = `${baseText} (${tempC}°C)`;
+            } else {
+                opt.textContent = `${baseText} (${tempF}°F)`;
+            }
+        }
+    }
+}
+
+function updateCookingMethodOptionTexts(isCelsius) {
+    const options = cookingMethod.options;
+    for (let i = 0; i < options.length; i++) {
+        const opt = options[i];
+        if (opt.value === 'high') {
+            opt.textContent = isCelsius ? 'High Heat Roasting (200°C+)' : 'High Heat Roasting (400°F+)';
+        } else if (opt.value === 'standard') {
+            opt.textContent = isCelsius ? 'Standard Baking / Pan Sear (175°C)' : 'Standard Baking/Pan Sear (350°F)';
+        } else if (opt.value === 'low') {
+            opt.textContent = isCelsius ? 'Low & Slow / Smoking (110°C)' : 'Low & Slow / Smoking (225°F)';
+        }
+    }
+}
+
 // UI Logic
 function updateUI() {
-    const isCelsius = unitToggle.checked;
+    const isCelsius = (currentUnit === 'metric');
+    updateDonenessOptionTexts(isCelsius);
+    updateCookingMethodOptionTexts(isCelsius);
     const isBrisketOverride = (meatType.value === 'beef' && cutSize.value === 'brisket');
     const isDuckBreastOverride = (meatType.value === 'duck' && cutSize.value === 'duck_breast');
 
@@ -153,11 +210,12 @@ function updateUI() {
 
 // Math Engine
 function convertToCelsius(f) {
-    return Math.round((f - 32) * 5 / 9);
+    const c = (f - 32) * 5 / 9;
+    return Math.round(c * 10) / 10;
 }
 
 function calculate() {
-    const isCelsius = unitToggle.checked;
+    const isCelsius = (currentUnit === 'metric');
     const isPoultry = meatType.value === 'poultry';
     const isPork = meatType.value === 'pork';
     const isFish = meatType.value === 'fish';
@@ -244,8 +302,16 @@ function calculate() {
     
     // Display
     if (isCelsius) {
-        const pullTempC = convertToCelsius(pullTempF);
-        const targetTempC = convertToCelsius(targetTempF);
+        let pullTempC = convertToCelsius(pullTempF);
+        let targetTempC = convertToCelsius(targetTempF);
+        if (isBrisketOverride) {
+            pullTempC = 92;
+            targetTempC = 95;
+        }
+        if (isDuckBreastOverride) {
+            pullTempC = 54.4;
+            targetTempC = 57.2;
+        }
         pullTempOutput.innerText = `${pullTempC}°C`;
         targetTempOutput.innerText = `${targetTempC}°C`;
     } else {
@@ -254,25 +320,44 @@ function calculate() {
     }
 
     if (isBrisketOverride) {
-        restWarning.innerHTML = `<strong>Brisket Override:</strong> Low & slow brisket requires breaking down tough collagen up to 203°F. Pull at 198°F and immediately store inside an insulated cooler for a minimum of 2 hours to rest.`;
+        restWarning.innerHTML = isCelsius
+            ? `<strong>Brisket Override:</strong> Pull at 92°C (198°F) and store in an insulated cooler for a minimum of 2 hours.`
+            : `<strong>Brisket Override:</strong> Pull at 198°F (92°C) and store in an insulated cooler for a minimum of 2 hours.`;
     } else if (isDuckBreastOverride) {
-        restWarning.innerHTML = `<strong>Chef's Note:</strong> For premium duck breast, bypass generic well-done poultry guidelines to preserve succulence. Pull at 130°F and rest for 8 minutes.`;
+        restWarning.innerHTML = isCelsius
+            ? `<strong>Chef's Note:</strong> For premium duck breast, bypass generic well-done poultry guidelines to preserve succulence. Pull at 54.4°C (130°F) for medium-rare and rest for 8 minutes.`
+            : `<strong>Chef's Note:</strong> For premium duck breast, bypass generic well-done poultry guidelines to preserve succulence. Pull at 130°F (54.4°C) for medium-rare and rest for 8 minutes.`;
     } else if (isGame) {
-        restWarning.innerHTML = `<strong>Chef's Note:</strong> Game meat is extremely lean. It is highly recommended not to target above Medium-Rare (135°F) or it will dry out. Rest 5-10 minutes.`;
+        restWarning.innerHTML = isCelsius
+            ? `<strong>Chef's Note:</strong> Game meat is extremely lean. It is highly recommended not to target above Medium-Rare (57°C) or it will dry out. Rest 5-10 minutes.`
+            : `<strong>Chef's Note:</strong> Game meat is extremely lean. It is highly recommended not to target above Medium-Rare (135°F) or it will dry out. Rest 5-10 minutes.`;
     } else if (isBbq) {
-        restWarning.innerHTML = `<strong>Chef's Note:</strong> Barbecue cuts are cooked for tenderness, not temperature. Pull when a probe slides in like warm butter (usually around 195°F-203°F). You MUST rest these large cuts in an insulated cooler for 1 to 2 hours before slicing.`;
+        restWarning.innerHTML = isCelsius
+            ? `<strong>Chef's Note:</strong> Barbecue cuts are cooked for tenderness, not temperature. Pull when a probe slides in like warm butter (usually around 90.6°C-95°C). You MUST rest these large cuts in an insulated cooler for 1 to 2 hours before slicing.`
+            : `<strong>Chef's Note:</strong> Barbecue cuts are cooked for tenderness, not temperature. Pull when a probe slides in like warm butter (usually around 195°F-203°F). You MUST rest these large cuts in an insulated cooler for 1 to 2 hours before slicing.`;
     } else {
         restWarning.innerHTML = `<strong>Chef's Note:</strong> You must rest the meat uncovered for at least <strong>${restTimeStr}</strong> to achieve this final temperature. Cutting early halts the cooking process and ruins the calculation.`;
     }
 }
 
 // Event Listeners
-unitToggle.addEventListener('change', () => {
+function setUnitSystem(unit) {
+    currentUnit = unit;
+    if (unit === 'metric') {
+        unitMetricBtn.classList.add('active');
+        unitImperialBtn.classList.remove('active');
+    } else {
+        unitImperialBtn.classList.add('active');
+        unitMetricBtn.classList.remove('active');
+    }
     updateUI();
     if (pullTempOutput.innerText !== '--°F' && pullTempOutput.innerText !== '--°C') {
         calculate();
     }
-});
+}
+
+unitImperialBtn.addEventListener('click', () => setUnitSystem('imperial'));
+unitMetricBtn.addEventListener('click', () => setUnitSystem('metric'));
 
 meatType.addEventListener('change', () => {
     updateUI();
@@ -297,8 +382,7 @@ updateUI();
 copyBtn.addEventListener('click', () => {
     if (pullTempOutput.innerText === '--°F' || pullTempOutput.innerText === '--°C') return;
     
-    const isCelsius = unitToggle.checked;
-    const unit = isCelsius ? '°C' : '°F';
+    const isCelsius = (currentUnit === 'metric');
     const textToCopy = `Perfect Roast Pull Temp Calculation:\nMeat: ${meatType.options[meatType.selectedIndex].text}\nCut: ${cutSize.options[cutSize.selectedIndex].text}\nPull From Heat At: ${pullTempOutput.innerText}\nTarget Final Temp: ${targetTempOutput.innerText}\nNote: ${restWarning.innerText}`;
     
     navigator.clipboard.writeText(textToCopy).then(() => {
