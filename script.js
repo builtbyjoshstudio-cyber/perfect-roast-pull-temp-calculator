@@ -39,53 +39,66 @@ const fishSafeOpt = document.getElementById('fish-safe');
 const duckMrOpt = document.getElementById('duck-mr');
 const duckMedOpt = document.getElementById('duck-med');
 const bbqSafeOpt = document.getElementById('bbq-safe');
+const cookingMethod = document.getElementById('cooking-method');
+const brisketSafeOpt = document.getElementById('brisket-safe');
+const duckBreastMrOpt = document.getElementById('duck-breast-mr');
+const cutBrisket = document.getElementById('cut-brisket');
+const cutDuckBreast = document.getElementById('cut-duck-breast');
 
 // UI Logic
 function updateUI() {
     const isCelsius = unitToggle.checked;
-    
-    // Manage Pork constraints
-    const options = finalDoneness.options;
-    for (let i = 0; i < options.length; i++) {
-        const val = parseInt(options[i].value);
-        if (options[i].id === 'poultry-safe' || options[i].id === 'fish-safe' || options[i].id === 'duck-mr' || options[i].id === 'duck-med' || options[i].id === 'bbq-safe') continue; // handled separately
-        
-        if (meatType.value === 'pork' && val < 145) {
-            options[i].disabled = true;
-            if (finalDoneness.value == options[i].value) {
-                finalDoneness.value = "145"; // fallback to safe pork temp
-            }
-        } else {
-            options[i].disabled = false;
+    const isBrisketOverride = (meatType.value === 'beef' && cutSize.value === 'brisket');
+    const isDuckBreastOverride = (meatType.value === 'duck' && cutSize.value === 'duck_breast');
+
+    // Manage special cuts visibility in cutSize dropdown
+    if (meatType.value === 'beef') {
+        cutBrisket.style.display = '';
+        cutDuckBreast.style.display = 'none';
+    } else if (meatType.value === 'duck') {
+        cutBrisket.style.display = 'none';
+        cutDuckBreast.style.display = '';
+    } else {
+        cutBrisket.style.display = 'none';
+        cutDuckBreast.style.display = 'none';
+        if (cutSize.value === 'brisket' || cutSize.value === 'duck_breast') {
+            cutSize.value = 'large';
         }
     }
 
-    // Manage Poultry constraints
-    if (meatType.value === 'poultry') {
-        // Hide standard options, show and force select Safe option
+    const options = finalDoneness.options;
+    
+    if (isBrisketOverride) {
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].id !== 'brisket-safe') {
+                options[i].style.display = 'none';
+            }
+        }
+        brisketSafeOpt.style.display = '';
+        finalDoneness.value = "203";
+    } else if (isDuckBreastOverride) {
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].id !== 'duck-breast-mr') {
+                options[i].style.display = 'none';
+            }
+        }
+        duckBreastMrOpt.style.display = '';
+        finalDoneness.value = "135";
+    } else if (meatType.value === 'poultry') {
         for (let i = 0; i < options.length; i++) {
             if (options[i].id !== 'poultry-safe') {
                 options[i].style.display = 'none';
             }
         }
         poultrySafeOpt.style.display = '';
-        fishSafeOpt.style.display = 'none';
-        duckMrOpt.style.display = 'none';
-        duckMedOpt.style.display = 'none';
-        bbqSafeOpt.style.display = 'none';
         finalDoneness.value = "165";
     } else if (meatType.value === 'fish') {
-        // Hide standard options, show and force select Fish safe option
         for (let i = 0; i < options.length; i++) {
             if (options[i].id !== 'fish-safe') {
                 options[i].style.display = 'none';
             }
         }
         fishSafeOpt.style.display = '';
-        poultrySafeOpt.style.display = 'none';
-        duckMrOpt.style.display = 'none';
-        duckMedOpt.style.display = 'none';
-        bbqSafeOpt.style.display = 'none';
         finalDoneness.value = "140";
     } else if (meatType.value === 'duck') {
         for (let i = 0; i < options.length; i++) {
@@ -95,45 +108,47 @@ function updateUI() {
         }
         duckMrOpt.style.display = '';
         duckMedOpt.style.display = '';
-        poultrySafeOpt.style.display = 'none';
-        fishSafeOpt.style.display = 'none';
-        bbqSafeOpt.style.display = 'none';
         if (finalDoneness.value !== "130" && finalDoneness.value !== "140") {
             finalDoneness.value = "130";
         }
     } else if (meatType.value === 'bbq') {
-        // Hide standard options, show and force select BBQ option
         for (let i = 0; i < options.length; i++) {
             if (options[i].id !== 'bbq-safe') {
                 options[i].style.display = 'none';
             }
         }
         bbqSafeOpt.style.display = '';
-        poultrySafeOpt.style.display = 'none';
-        fishSafeOpt.style.display = 'none';
-        duckMrOpt.style.display = 'none';
-        duckMedOpt.style.display = 'none';
         finalDoneness.value = "200";
     } else {
-        // Hide safe options, show standard options
+        // Hide all special options, show standard options
+        const specialIds = ['poultry-safe', 'fish-safe', 'duck-mr', 'duck-med', 'bbq-safe', 'brisket-safe', 'duck-breast-mr'];
         for (let i = 0; i < options.length; i++) {
-            if (options[i].id !== 'poultry-safe' && options[i].id !== 'fish-safe' && options[i].id !== 'duck-mr' && options[i].id !== 'duck-med' && options[i].id !== 'bbq-safe') {
+            if (!specialIds.includes(options[i].id)) {
                 options[i].style.display = '';
+            } else {
+                options[i].style.display = 'none';
             }
         }
-        poultrySafeOpt.style.display = 'none';
-        fishSafeOpt.style.display = 'none';
-        duckMrOpt.style.display = 'none';
-        duckMedOpt.style.display = 'none';
-        bbqSafeOpt.style.display = 'none';
-        if (finalDoneness.value === "165" || finalDoneness.value === "140" || finalDoneness.value === "130" || finalDoneness.value === "200") {
-            finalDoneness.value = "145"; // reset back to medium
+        
+        // Manage Pork constraints
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].style.display !== 'none') {
+                const val = parseInt(options[i].value);
+                if (meatType.value === 'pork' && val < 145) {
+                    options[i].disabled = true;
+                    if (finalDoneness.value == options[i].value) {
+                        finalDoneness.value = "145";
+                    }
+                } else {
+                    options[i].disabled = false;
+                }
+            }
+        }
+
+        if (['165', '140', '130', '200', '203', '135'].includes(finalDoneness.value)) {
+            finalDoneness.value = "145";
         }
     }
-
-    // Update labels based on unit
-    const unitLabel = isCelsius ? '°C' : '°F';
-    // Optionally update select text to show C instead of F if needed, but not strictly required
 }
 
 // Math Engine
@@ -150,6 +165,9 @@ function calculate() {
     const isDuck = meatType.value === 'duck';
     const isBbq = meatType.value === 'bbq';
     
+    const isBrisketOverride = (meatType.value === 'beef' && cutSize.value === 'brisket');
+    const isDuckBreastOverride = (meatType.value === 'duck' && cutSize.value === 'duck_breast');
+    
     let targetTempF = parseInt(finalDoneness.value);
     
     // Enforce logic rule minimums defensively
@@ -157,29 +175,68 @@ function calculate() {
     if (isFish) targetTempF = 140;
     if (isBbq) targetTempF = 200;
     if (isPork && targetTempF < 145) targetTempF = 145;
+    if (isBrisketOverride) targetTempF = 203;
+    if (isDuckBreastOverride) targetTempF = 135; // Medium-Rare target
 
     let carryoverSubF = 0;
     let restTimeStr = "";
+    const method = cookingMethod.value; // 'standard', 'high', 'low'
     
-    if (isFish) {
+    if (isBrisketOverride) {
+        carryoverSubF = 5; // Pull at 198°F (203 - 5 = 198)
+    } else if (isDuckBreastOverride) {
+        carryoverSubF = 5; // Pull at 130°F (135 - 5 = 130)
+    } else if (isFish) {
         carryoverSubF = 3;
         restTimeStr = "a few minutes";
     } else if (isBbq) {
         carryoverSubF = targetTempF - 195; // Forces pull temp to 195
     } else {
-        switch (cutSize.value) {
-            case 'large':
-                carryoverSubF = 10;
-                restTimeStr = "15 mins for large roasts";
-                break;
-            case 'thick':
-                carryoverSubF = 5;
-                restTimeStr = "5 mins for steaks/chops";
-                break;
-            case 'thin':
-                carryoverSubF = 2;
-                restTimeStr = "5 mins for thin cuts";
-                break;
+        if (method === 'high') {
+            switch (cutSize.value) {
+                case 'large':
+                    carryoverSubF = 15;
+                    restTimeStr = "15-20 mins for large roasts (intense high-heat carryover)";
+                    break;
+                case 'thick':
+                    carryoverSubF = 12;
+                    restTimeStr = "10 mins for thick cuts (high-heat carryover)";
+                    break;
+                case 'thin':
+                    carryoverSubF = 10;
+                    restTimeStr = "5-8 mins for thin cuts (high-heat carryover)";
+                    break;
+            }
+        } else if (method === 'low') {
+            switch (cutSize.value) {
+                case 'large':
+                    carryoverSubF = 4;
+                    restTimeStr = "10 mins for large roasts (minimal low-gradient carryover)";
+                    break;
+                case 'thick':
+                    carryoverSubF = 3;
+                    restTimeStr = "5 mins for thick cuts (minimal low-gradient carryover)";
+                    break;
+                case 'thin':
+                    carryoverSubF = 2;
+                    restTimeStr = "3-5 mins for thin cuts (minimal low-gradient carryover)";
+                    break;
+            }
+        } else { // 'standard'
+            switch (cutSize.value) {
+                case 'large':
+                    carryoverSubF = 7;
+                    restTimeStr = "15 mins for large roasts";
+                    break;
+                case 'thick':
+                    carryoverSubF = 6;
+                    restTimeStr = "5 mins for steaks/chops";
+                    break;
+                case 'thin':
+                    carryoverSubF = 5;
+                    restTimeStr = "5 mins for thin cuts";
+                    break;
+            }
         }
     }
 
@@ -196,7 +253,11 @@ function calculate() {
         targetTempOutput.innerText = `${targetTempF}°F`;
     }
 
-    if (isGame) {
+    if (isBrisketOverride) {
+        restWarning.innerHTML = `<strong>Brisket Override:</strong> Low & slow brisket requires breaking down tough collagen up to 203°F. Pull at 198°F and immediately store inside an insulated cooler for a minimum of 2 hours to rest.`;
+    } else if (isDuckBreastOverride) {
+        restWarning.innerHTML = `<strong>Chef's Note:</strong> For premium duck breast, bypass generic well-done poultry guidelines to preserve succulence. Pull at 130°F and rest for 8 minutes.`;
+    } else if (isGame) {
         restWarning.innerHTML = `<strong>Chef's Note:</strong> Game meat is extremely lean. It is highly recommended not to target above Medium-Rare (135°F) or it will dry out. Rest 5-10 minutes.`;
     } else if (isBbq) {
         restWarning.innerHTML = `<strong>Chef's Note:</strong> Barbecue cuts are cooked for tenderness, not temperature. Pull when a probe slides in like warm butter (usually around 195°F-203°F). You MUST rest these large cuts in an insulated cooler for 1 to 2 hours before slicing.`;
@@ -215,6 +276,16 @@ unitToggle.addEventListener('change', () => {
 
 meatType.addEventListener('change', () => {
     updateUI();
+});
+
+cutSize.addEventListener('change', () => {
+    updateUI();
+});
+
+cookingMethod.addEventListener('change', () => {
+    if (pullTempOutput.innerText !== '--°F' && pullTempOutput.innerText !== '--°C') {
+        calculate();
+    }
 });
 
 calculateBtn.addEventListener('click', calculate);

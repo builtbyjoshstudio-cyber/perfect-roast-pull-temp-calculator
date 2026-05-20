@@ -168,11 +168,22 @@ select.form-input option {
           </div>
 
           <div class="input-group">
-            <span class="input-label">Cut Size</span>
+            <span class="input-label">Cut / Size</span>
             <select id="cut-size" class="form-input">
               <option value="large">Large Roast / Whole Bird</option>
               <option value="thick">Thick Steak / Chop</option>
               <option value="thin">Thin Cut</option>
+              <option value="brisket" id="cut-brisket" style="display: none;">Brisket</option>
+              <option value="duck_breast" id="cut-duck-breast" style="display: none;">Duck Breast</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <span class="input-label">Cooking Method / Environment</span>
+            <select id="cooking-method" class="form-input">
+              <option value="standard">Standard Baking/Pan Sear (350°F)</option>
+              <option value="high">High Heat Roasting (400°F+)</option>
+              <option value="low">Low & Slow / Smoking (225°F)</option>
             </select>
           </div>
 
@@ -189,6 +200,8 @@ select.form-input option {
               <option value="130" style="display: none;" id="duck-mr">Medium-Rare (130°F / 54°C)</option>
               <option value="140" style="display: none;" id="duck-med">Medium (140°F / 60°C)</option>
               <option value="200" style="display: none;" id="bbq-safe">Probe Tender (200°F - 205°F)</option>
+              <option value="203" style="display: none;" id="brisket-safe">Collagen Breakdown (203°F / 95°C)</option>
+              <option value="135" style="display: none;" id="duck-breast-mr">Medium-Rare (135°F / 57°C)</option>
             </select>
           </div>
        </div>
