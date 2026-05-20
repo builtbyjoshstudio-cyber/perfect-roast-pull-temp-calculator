@@ -29,7 +29,7 @@ const unitImperialBtn = document.getElementById('unit-imperial');
 const unitMetricBtn = document.getElementById('unit-metric');
 let currentUnit = 'imperial';
 
-const meatType = document.getElementById('meat-type');
+const meatType = document.getElementById('protein-type');
 const cutSize = document.getElementById('cut-size');
 const finalDoneness = document.getElementById('final-doneness');
 const calculateBtn = document.getElementById('calculate-btn');
@@ -105,14 +105,11 @@ function updateUI() {
     const isCelsius = (currentUnit === 'metric');
     updateDonenessOptionTexts(isCelsius);
     updateCookingMethodOptionTexts(isCelsius);
-    const isBrisketOverride = (meatType.value === 'beef' && cutSize.value === 'brisket');
-    const isDuckBreastOverride = (meatType.value === 'duck' && cutSize.value === 'duck_breast');
+    const isBrisketOverride = (meatType.value === 'beef-brisket');
+    const isDuckBreastOverride = (meatType.value === 'duck-goose' && cutSize.value === 'duck_breast');
 
     // Manage special cuts visibility in cutSize dropdown
-    if (meatType.value === 'beef') {
-        cutBrisket.style.display = '';
-        cutDuckBreast.style.display = 'none';
-    } else if (meatType.value === 'duck') {
+    if (meatType.value === 'duck-goose') {
         cutBrisket.style.display = 'none';
         cutDuckBreast.style.display = '';
     } else {
@@ -141,7 +138,7 @@ function updateUI() {
         }
         duckBreastMrOpt.style.display = '';
         finalDoneness.value = "135";
-    } else if (meatType.value === 'poultry') {
+    } else if (meatType.value === 'turkey' || meatType.value === 'chicken') {
         for (let i = 0; i < options.length; i++) {
             if (options[i].id !== 'poultry-safe') {
                 options[i].style.display = 'none';
@@ -149,7 +146,7 @@ function updateUI() {
         }
         poultrySafeOpt.style.display = '';
         finalDoneness.value = "165";
-    } else if (meatType.value === 'fish') {
+    } else if (meatType.value === 'seafood') {
         for (let i = 0; i < options.length; i++) {
             if (options[i].id !== 'fish-safe') {
                 options[i].style.display = 'none';
@@ -157,7 +154,7 @@ function updateUI() {
         }
         fishSafeOpt.style.display = '';
         finalDoneness.value = "140";
-    } else if (meatType.value === 'duck') {
+    } else if (meatType.value === 'duck-goose') {
         for (let i = 0; i < options.length; i++) {
             if (options[i].id !== 'duck-mr' && options[i].id !== 'duck-med') {
                 options[i].style.display = 'none';
@@ -168,7 +165,7 @@ function updateUI() {
         if (finalDoneness.value !== "130" && finalDoneness.value !== "140") {
             finalDoneness.value = "130";
         }
-    } else if (meatType.value === 'bbq') {
+    } else if (meatType.value === 'pork-shoulder') {
         for (let i = 0; i < options.length; i++) {
             if (options[i].id !== 'bbq-safe') {
                 options[i].style.display = 'none';
@@ -187,18 +184,10 @@ function updateUI() {
             }
         }
         
-        // Manage Pork constraints
+        // Reset disabled states for standard options
         for (let i = 0; i < options.length; i++) {
             if (options[i].style.display !== 'none') {
-                const val = parseInt(options[i].value);
-                if (meatType.value === 'pork' && val < 145) {
-                    options[i].disabled = true;
-                    if (finalDoneness.value == options[i].value) {
-                        finalDoneness.value = "145";
-                    }
-                } else {
-                    options[i].disabled = false;
-                }
+                options[i].disabled = false;
             }
         }
 
@@ -216,15 +205,14 @@ function convertToCelsius(f) {
 
 function calculate() {
     const isCelsius = (currentUnit === 'metric');
-    const isPoultry = meatType.value === 'poultry';
-    const isPork = meatType.value === 'pork';
-    const isFish = meatType.value === 'fish';
-    const isGame = meatType.value === 'game';
-    const isDuck = meatType.value === 'duck';
-    const isBbq = meatType.value === 'bbq';
+    const isPoultry = (meatType.value === 'turkey' || meatType.value === 'chicken');
+    const isFish = (meatType.value === 'seafood');
+    const isGame = (meatType.value === 'game-meat');
+    const isDuck = (meatType.value === 'duck-goose');
+    const isBbq = (meatType.value === 'pork-shoulder');
     
-    const isBrisketOverride = (meatType.value === 'beef' && cutSize.value === 'brisket');
-    const isDuckBreastOverride = (meatType.value === 'duck' && cutSize.value === 'duck_breast');
+    const isBrisketOverride = (meatType.value === 'beef-brisket');
+    const isDuckBreastOverride = (meatType.value === 'duck-goose' && cutSize.value === 'duck_breast');
     
     let targetTempF = parseInt(finalDoneness.value);
     
@@ -232,7 +220,6 @@ function calculate() {
     if (isPoultry) targetTempF = 165;
     if (isFish) targetTempF = 140;
     if (isBbq) targetTempF = 200;
-    if (isPork && targetTempF < 145) targetTempF = 145;
     if (isBrisketOverride) targetTempF = 203;
     if (isDuckBreastOverride) targetTempF = 135; // Medium-Rare target
 
@@ -393,3 +380,35 @@ copyBtn.addEventListener('click', () => {
         }, 2000);
     });
 });
+
+// Ingestion of URL Parameters
+function parseUrlParameters() {
+    const params = new URLSearchParams(window.location.search);
+    const unit = params.get('unit');
+    const protein = params.get('protein');
+
+    if (unit && (unit.toLowerCase() === 'kg' || unit.toLowerCase() === 'metric')) {
+        setUnitSystem('metric');
+    } else if (unit && (unit.toLowerCase() === 'lbs' || unit.toLowerCase() === 'imperial')) {
+        setUnitSystem('imperial');
+    }
+
+    if (protein) {
+        const select = document.getElementById("protein-type");
+        const lowerProtein = protein.toLowerCase();
+        for (let option of select.options) {
+            if (option.value.toLowerCase() === lowerProtein || option.text.toLowerCase().includes(lowerProtein)) {
+                select.value = option.value;
+                break;
+            }
+        }
+    }
+
+    updateUI();
+
+    if (protein) {
+        calculate();
+    }
+}
+
+parseUrlParameters();
